@@ -88,6 +88,7 @@ quantum_embedding_dimensions = [512]
 # Dictionary defining available models along with associated hyperparameters
 model_map = {
     "Quixer": (quixer_hparams, quantum_embedding_dimensions),
+    "HybridQuixer": (quixer_hparams, quantum_embedding_dimensions),
     "Transformer": (transformer_hparams, classical_embedding_dimensions),
     "LSTM": (lstm_hparams, classical_embedding_dimensions),
     "FNet": (fnet_hparams, classical_embedding_dimensions),

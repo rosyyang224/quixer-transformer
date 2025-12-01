@@ -348,3 +348,66 @@ class Quixer(torch.nn.Module):
         final_probabilities = torch.linalg.vector_norm(qsvt_lcu_state, dim=-1)
 
         return output_logits, torch.mean(final_probabilities)
+
+# ==========================================
+# Hybrid Quixer (Quantum-Compressed Version)
+# ==========================================
+from qiskit import QuantumCircuit
+import torch.nn as nn
+
+class HybridQuixer(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, num_mix_layers=2, device="cpu"):
+        super().__init__()
+        self.vocab_size = vocab_size
+        self.embedding_dim = embedding_dim
+        self.num_mix_layers = num_mix_layers
+        self.device = device
+
+        # Classical embedding
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+
+        # Classical mixing stack
+        layers = []
+        hidden_dim = embedding_dim * 2
+        for _ in range(num_mix_layers):
+            layers.append(nn.Linear(embedding_dim, hidden_dim))
+            layers.append(nn.ReLU())
+            layers.append(nn.Linear(hidden_dim, embedding_dim))
+        self.mixer = nn.Sequential(*layers)
+
+        # Output head
+        self.head = nn.Linear(embedding_dim, vocab_size)
+
+        # Optional: tiny 2-qubit circuit for compression
+        self.qc = QuantumCircuit(2)
+        self.qc.ry(0.3, 0)
+        self.qc.ry(0.7, 1)
+        self.qc.cx(0, 1)
+        self.qc_state = None  # stored on first forward
+
+    def _maybe_run_qc(self):
+        if self.qc_state is None:
+            from qiskit import Aer, execute
+            backend = Aer.get_backend("statevector_simulator")
+            result = execute(self.qc, backend).result()
+            self.qc_state = torch.tensor(
+                result.get_statevector(), dtype=torch.cfloat
+            ).to(self.device)
+        return self.qc_state
+
+    def forward(self, x):
+        # x: [batch, window]
+        batch, window = x.shape
+        x = self.embedding(x)          # [B, W, D]
+        x = self.mixer(x)              # [B, W, D]
+        x = x.mean(dim=1)              # [B, D]
+
+        qc_state = self._maybe_run_qc()  # [4]
+
+        # tile QC encoding to match batch
+        qc_feature = qc_state.real[:self.embedding_dim].unsqueeze(0)
+        qc_feature = qc_feature.repeat(batch, 1)
+
+        combined = x + qc_feature
+        logits = self.head(combined)
+        return logits, torch.tensor(1.0, device=x.device)

@@ -13,7 +13,7 @@ from torch.types import Device
 from torch.nn.modules.loss import _Loss
 import torchtext
 
-from quixer.quixer_model import Quixer
+from quixer.quixer_model import Quixer, HybridQuixer
 from quixer.baseline_models import Transformer, LSTM, FNet
 
 from datasets import load_dataset
@@ -211,6 +211,13 @@ def create_model(
             embedding_dimension=hyperparams["dimension"],
             dropout=hyperparams["dropout"],
             batch_size=hyperparams["batch_size"],
+            device=device,
+        )
+    elif model_str == "HybridQuixer":
+        model = HybridQuixer(
+            vocab_size=vocabulary_size,
+            embedding_dim=hyperparams["dimension"],
+            num_mix_layers=hyperparams["layers"],
             device=device,
         )
     elif model_str == "FNet":
