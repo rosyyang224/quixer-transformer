@@ -13,7 +13,7 @@ quixer_hparams = {
     "layers": 3,
     "ansatz_layers": 4,
     "window": 32,
-    "epochs": 30,
+    "epochs": 5, # changed from 30
     "restart_epochs": 30000,
     "dropout": 0.10,
     "lr": 0.002,
