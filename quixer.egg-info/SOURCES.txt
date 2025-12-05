@@ -1,0 +1,8 @@
+LICENSE
+README.md
+pyproject.toml
+quixer.egg-info/PKG-INFO
+quixer.egg-info/SOURCES.txt
+quixer.egg-info/dependency_links.txt
+quixer.egg-info/requires.txt
+quixer.egg-info/top_level.txt

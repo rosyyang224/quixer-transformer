@@ -14,6 +14,7 @@ from torch.nn.modules.loss import _Loss
 import torchtext
 
 from quixer.quixer_model import Quixer
+from quixer.mini_quixer_tq import MiniQuixerTQ
 from quixer.baseline_models import Transformer, LSTM, FNet
 
 from datasets import load_dataset
@@ -139,7 +140,7 @@ def setup_dataset(
     """
 
     # Download dataset from the Hugging Face Hub / load dataset
-    raw_dset = load_dataset("ptb_text_only")
+    raw_dset = load_dataset("ptb_text_only", trust_remote_code=True)
 
     # Get training data in PyArrow format
     train_iter = raw_dset["train"].data[0]
@@ -203,6 +204,18 @@ def create_model(
     model: torch.nn.Module
     if model_str == "Quixer":
         model = Quixer(
+            n_qubits=hyperparams["qubits"],
+            n_tokens=hyperparams["window"],
+            qsvt_polynomial_degree=hyperparams["layers"],
+            n_ansatz_layers=hyperparams["ansatz_layers"],
+            vocabulary_size=vocabulary_size,
+            embedding_dimension=hyperparams["dimension"],
+            dropout=hyperparams["dropout"],
+            batch_size=hyperparams["batch_size"],
+            device=device,
+        )
+    elif model_str == "MiniQuixerTQ":
+        model = MiniQuixerTQ(
             n_qubits=hyperparams["qubits"],
             n_tokens=hyperparams["window"],
             qsvt_polynomial_degree=hyperparams["layers"],

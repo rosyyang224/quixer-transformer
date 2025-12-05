@@ -4,6 +4,12 @@ import torch
 from quixer.setup_training import get_train_evaluate
 
 
+# Just run python run.py -m MiniQuixerTQ -d cuda
+# or
+# python run.py -m MiniQuixerTQ
+
+
+
 ##################################################
 # Default hyperparameters for each of the models #
 ##################################################
@@ -78,6 +84,25 @@ transformer_hparams = {
     "print_iter": 50,
 }
 
+miniquixer_tq_hparams = {
+    "qubits": 4,
+    "layers": 2,
+    "ansatz_layers": 0,
+    "window": 32,
+    "epochs": 5,
+    "restart_epochs": 30000,
+    "dropout": 0.10,
+    "lr": 0.002,
+    "lr_sched": "cos",
+    "wd": 0.0001,
+    "eps": 1e-10,
+    "batch_size": 32,
+    "max_grad_norm": 5.0,
+    "model": "MiniQuixerTQ",
+    "print_iter": 50,
+}
+
+
 ##################################################
 
 
@@ -91,12 +116,13 @@ model_map = {
     "Transformer": (transformer_hparams, classical_embedding_dimensions),
     "LSTM": (lstm_hparams, classical_embedding_dimensions),
     "FNet": (fnet_hparams, classical_embedding_dimensions),
+    "MiniQuixerTQ": (miniquixer_tq_hparams, classical_embedding_dimensions),
 }
 available_models = list(model_map.keys())
 
 # Parse command line arguments
 args = argparse.ArgumentParser(
-    prog="Quixer", description="Runs the Quixer model and/or classical baselines"
+    prog="Quixer", description="Runs the Quixer/MiniQuixerTQ model and/or classical baselines"
 )
 args.add_argument(
     "-m",
